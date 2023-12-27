@@ -82,9 +82,31 @@ class EmotionROI(Dataset):
     return image, annot
 
 
+class Emotion6Hard(EmotionROI):
+
+  transform_aug = T.Compose([
+    T.RandomResizedCrop(RESIZE, interpolation=T.InterpolationMode.NEAREST_EXACT, antialias=False),
+    T.RandomHorizontalFlip(),
+  ])
+
+  def __getitem__(self, idx:int):
+    fn = self.metadata[idx]
+    annot = self.transform_annot(load_pil(self.ant_dp / fn))
+    if self.split == 'train':
+      annot = self.transform_aug(annot)
+    label = self.class_names.index(fn.split('/')[0])
+    return annot, label
+
+
 if __name__ == '__main__':
   dataset = EmotionROI()
   for X, Y in iter(dataset):
     print(X.shape)
     print(Y.shape)
+    break
+
+  dataset = Emotion6Hard()
+  for X, Y in iter(dataset):
+    print(X.shape)
+    print(Y)
     break
