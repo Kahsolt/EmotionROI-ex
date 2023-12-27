@@ -8,6 +8,7 @@ import torch
 import torch.nn.functional as F
 from torch.nn import init
 from torch.optim import SGD
+from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchvision.models.segmentation.fcn import fcn_resnet50, FCN_ResNet50_Weights, FCN
 import matplotlib.pyplot as plt
 
@@ -15,10 +16,15 @@ from data import EmotionROI, DataLoader
 from utils import *
 
 # according to the essay, and also follow: https://arxiv.org/abs/1411.4038
-#LR = 1e-8   # this does NOT work!!
-LR = 1e-4
-EPOCHS = 20
-BATCH_SIZE = 20
+# NOTE: this does NOT work!!
+if not 'follow essay':
+  LR = 1e-8
+  EPOCHS = 20
+  BATCH_SIZE = 20
+else:
+  LR = 1e-2
+  EPOCHS = 100
+  BATCH_SIZE = 20
 
 
 def F_beta(prec:float, recall:float, beta:float) -> float:
@@ -62,6 +68,7 @@ def train(args):
 
   model = get_model().to(device)
   optimizer = SGD(model.parameters(), lr=LR, momentum=0.9, weight_decay=5e-4)
+  scheduler = CosineAnnealingLR(optimizer, T_max=EPOCHS, eta_min=1e-7, verbose=True)
 
   loss_train, loss_test = [], []
   step = 0
@@ -88,6 +95,7 @@ def train(args):
         print(f'>> [step {step}] loss: {loss.item()}')
 
     loss_train.append(mse / tot)
+    scheduler.step()
 
     ''' Eval '''
     tot, mse = 0, 0.0
