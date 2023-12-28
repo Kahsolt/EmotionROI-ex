@@ -14,6 +14,10 @@ DATA_EMOTIONROI_PATH = DATA_PATH / 'EmotionROI'
 
 RESIZE = (224, 224)
 
+# torchvision pretrained using ImageNet stats 
+TV_MEAN = [0.485, 0.456, 0.406]
+TV_STD  = [0.229, 0.224, 0.225]
+
 
 class ComposeDual(T.Compose):
 
@@ -46,7 +50,7 @@ class EmotionROI(Dataset):
 
   transform_image = T.Compose([
     T.ToTensor(),
-    T.Normalize(mean=[0.4165, 0.3834, 0.3488], std=[0.2936, 0.2805, 0.2850]),
+    T.Normalize(mean=TV_MEAN, std=TV_STD),
   ])
   transform_annot = T.Compose([
     T.ToTensor(),
@@ -77,28 +81,9 @@ class EmotionROI(Dataset):
       image, annot = self.transform_aug(image, annot)
     return image, annot
 
-  def show_stats(self):
-    ims = []
-    for dp in tqdm((self.img_dp.iterdir())):
-      for fp in tqdm(list(dp.iterdir())):
-        img = load_pil(fp)
-        img = img.resize(RESIZE, resample=Resampling.BILINEAR)
-        ims.append(pil_to_npimg(img))
-    X = torch.from_numpy(np.stack(ims, axis=0))
-    X = X.permute(0, 3, 1, 2)
-
-    # [N=1980, C=3, H=224, W=224]
-    print('X.shape', X.shape)
-    # [0.4165, 0.3834, 0.3488]
-    print('mean:', X.mean(axis=[0, 2, 3]))
-    # [0.2936, 0.2805, 0.2850]
-    print('std:',  X.std (axis=[0, 2, 3]))
-
 
 if __name__ == '__main__':
   dataset = EmotionROI()
-  #dataset.show_stats()
-
   for X, Y in iter(dataset):
     print(X.shape)
     print(Y.shape)

@@ -32,6 +32,25 @@ def F_beta(prec:float, recall:float, beta:float) -> float:
   return (1 + beta**2) * (prec * recall) / (beta**2 * prec + recall)
 
 
+def FCN_forward_hijack(self:FCN, x:Tensor) -> Dict[str, Tensor]:
+  input_shape = x.shape[-2:]
+  features = self.backbone(x)   # x8 downsample
+
+  result = OrderedDict()
+  x = features["out"]
+  x = self.classifier(x)
+  x = F.interpolate(x, size=input_shape, mode='nearest-exact')  # x8 upsample
+  result["out"] = x
+
+  if self.aux_classifier is not None:
+    x = features["aux"]
+    x = self.aux_classifier(x)
+    x = F.interpolate(x, size=input_shape, mode='nearest-exact')  # x8 upsample
+    result["aux"] = x
+
+  return result
+
+
 def get_model() -> FCN:
   from torch.nn import Conv2d
 
@@ -54,6 +73,8 @@ def get_model() -> FCN:
   if new_layer.bias is not None:
     init.zeros_(new_layer.bias)
   model.classifier[-1] = new_layer
+  # hijack forward
+  model.forward = lambda x: FCN_forward_hijack(model, x)
 
   return model
 
