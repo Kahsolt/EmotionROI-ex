@@ -60,11 +60,12 @@ class EmotionROI(Dataset):
     RandomHorizontalFlipDual(),
   ])
 
-  def __init__(self, split:str='train', root:Path=DATA_EMOTIONROI_PATH):
+  def __init__(self, split:str='train', ret_label:bool=False, root:Path=DATA_EMOTIONROI_PATH):
     assert split in ['train', 'test'], f'>> split should be "train" or "test", but got: {split}'
 
     self.root = root
     self.split = split
+    self.ret_label = ret_label
     self.img_dp = root / 'images'
     self.ant_dp = root / 'ground_truth'
     lst_dp = root / 'training_testing_split'
@@ -79,7 +80,11 @@ class EmotionROI(Dataset):
     annot = self.transform_annot(load_pil(self.ant_dp / fn))
     if self.split == 'train':
       image, annot = self.transform_aug(image, annot)
-    return image, annot
+    if self.ret_label:
+      label = self.class_names.index(fn.split('/')[0])
+      return image, annot, label
+    else:
+      return image, annot
 
 
 class Emotion6Hard(EmotionROI):

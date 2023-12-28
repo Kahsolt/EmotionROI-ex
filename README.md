@@ -20,7 +20,16 @@ The results reported in the EmotionROI/FCNEL essay:
 - The essay might use the default `Bilinear` for output upsacling, we instead use `Nearest-Exact` to simulate `FCN-32s` resolution
 
 ![FCNEL-infer](img/FCNEL-infer.png)  
-![FCNEL-loss](img/FCNEL-loss.png)  
+![FCNEL-loss](img/FCNEL-loss.png)
+
+
+### Modifyied EmoFCNEL for ROI prediction with emotion condition
+
+ℹ Predict ROI with any emotion label (except for `sadness`) results into nearly the same output...  
+ℹ The ROI annotations are probably NOT related to certain emotion, but only indicates **human attention focus**  
+
+![EmoFCNEL-infer](img/EmoFCNEL-infer.png)
+![EmoFCNEL-loss](img/EmoFCNEL-loss.png)
 
 
 ### Predict emotion directly from ROI annotation

@@ -140,13 +140,15 @@ def train(args):
     plt.plot(loss_test, 'b', label='test')
     plt.legend()
     plt.tight_layout()
-    plt.savefig(IMG_PATH / 'FCNEL-loss.png', dpi=600)
+    plt.savefig(IMG_PATH / f'{args.model}-loss.png', dpi=600)
 
-  torch.save(model.state_dict(), LOG_PATH / 'model-FCNEL.pth')
+  torch.save(model.state_dict(), LOG_PATH / f'model-{args.model}.pth')
 
 
 if __name__ == '__main__':
   parser = ArgumentParser()
   args = parser.parse_args()
+
+  args.model = 'FCNEL'
 
   train(args)

@@ -18,9 +18,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from data import EmotionROI
 from utils import *
 
-from train_FCNEL import get_model as get_model_FCNEL
-
-device = 'cpu'
+from train_FCNEL import get_model
 
 WINDOW_TITLE = 'ROI interactive'
 WINDOW_SIZE  = (800, 500)
@@ -36,7 +34,8 @@ CMAPS  = [None, 'grey', 'grey']
 def infer(model:FCN, X:Tensor) -> npimg_u8:
   X = X.unsqueeze_(0).to(device)
   output = model(X)['out']
-  pred = torch.clamp(output[0], 0.0, 1.0).squeeze().cpu().numpy()
+  pred = torch.clamp(output[0], 0.0, 1.0)
+  pred = pred.squeeze().permute([1, 2, 0]).cpu().numpy()
   return im_f32_t2_u8(pred)
 
 
@@ -66,14 +65,7 @@ class App:
   def init_workspace(self):
     seed_everything()
 
-    model: FCN = globals()[f'get_model_{args.model}']()
-    fp = args.load or (LOG_PATH / f'model-{args.model}.pth')
-    print(f'>> load weights from {fp}')
-    state_dict = torch.load(fp, map_location='cpu')
-    model.load_state_dict(state_dict)
-    model = model.eval().to(device)
-
-    self.model = model
+    self.load_model()
     self._change_data_source()
     self._change_dataset_idx()
 
@@ -124,16 +116,33 @@ class App:
       self.fig: Figure = fig
       self.cvs: FigureCanvasTkAgg = cvs
 
+  def load_model(self):
+    args = self.args
+    model: FCN = get_model()
+    fp = args.load or (LOG_PATH / f'model-{args.model}.pth')
+    print(f'>> load weights from {fp}')
+    state_dict = torch.load(fp, map_location='cpu')
+    model.load_state_dict(state_dict)
+    model = model.eval().to(device)
+    self.model = model
+
+  def load_dataset(self, split:str):
+    if split == 'train' and self.trainset is None:
+      self.trainset = EmotionROI('train')
+    if split == 'test' and self.testset is None:
+      self.testset = EmotionROI('test')
+
+  def run_infer(self, X:Tensor) -> npimg:
+    return infer(self.model, X)
+
   def _change_data_source(self):
     src = self.var_data_src.get()
     if src == 'train':
-      if self.trainset is None:
-        self.trainset = EmotionROI('train')
+      self.load_dataset(src)
       self.sc.config(to=len(self.trainset) - 1)
       self.var_idx.set(self.data_src_memo[src])
     elif src == 'test':
-      if self.testset is None:
-        self.testset = EmotionROI('test')
+      self.load_dataset(src)
       self.sc.config(to=len(self.testset) - 1)
       self.var_idx.set(self.data_src_memo[src])
     elif src == '<file>':
@@ -154,7 +163,7 @@ class App:
     tc_to_u8 = lambda x: im_f32_t2_u8(x.permute([1, 2, 0]).squeeze().cpu().numpy())
     ims = [
       tc_to_u8(X),
-      infer(self.model, X),
+      self.run_infer(X),
       tc_to_u8(Y),
     ]
     self.data_src_memo[src] = idx
@@ -181,7 +190,7 @@ class App:
     ims.append(pil_to_npimg(img, dtype=np.uint8))
     # fig 2: prediction
     X: Tensor = EmotionROI.transform_image(img)
-    ims.append(infer(self.model, X))
+    ims.append(self.run_infer(X))
     # fig 3: ground truth (optional)
     fp_gt = Path(str(fp).replace('\\', '/').replace('/images/', '/ground_truth/'))
     has_gt = fp_gt.is_file()
@@ -200,10 +209,14 @@ class App:
     self.cvs.draw()
 
 
-if __name__ == '__main__':
+def get_args():
   parser = ArgumentParser()
-  parser.add_argument('-M', '--model', default='FCNEL', choices=['FCNEL', 'EmoFCNEL'])
   parser.add_argument('--load', type=Path, help='pretrained ckpt path')
   args = parser.parse_args()
+  return args
 
+
+if __name__ == '__main__':
+  args = get_args()
+  args.model = 'FCNEL'
   App(args)
