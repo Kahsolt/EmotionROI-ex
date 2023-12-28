@@ -4,12 +4,34 @@
 
 ----
 
-Reproduction the **FCNEL** model in essay [WHERE DO EMOTIONS COME FROM? PREDICTING THE EMOTION STIMULI MAP](http://chenlab.ece.cornell.edu/Publication/Kuan-Chuan/ICIP16_EmotionROI.pdf), 
-and some extended applications
+Reproduction the **FCNEL** model in essay [WHERE DO EMOTIONS COME FROM? PREDICTING THE EMOTION STIMULI MAP](http://chenlab.ece.cornell.edu/Publication/Kuan-Chuan/ICIP16_EmotionROI.pdf), and extended applications.
 
-⚪ original FCNEL for ROI prediction
+The results reported in the EmotionROI/FCNEL essay:
 
 ![FCNEL](img/FCNEL.png)
+
+
+### Reproduce FCNEL for ROI prediction
+
+⚠ Can NOT reproduce essay results exactly, here're the implementation differences:
+
+- The essay uses `FCN-32s + AlexNet`, we use `FCN-8s + ResNet50`
+- The essay uses `lr=1e-8` to refine `20` epochs, which is two small and doesn't have any effect in our setting, we instead use `lr=1e-2` to train `100` epochs with `CosineAnnealingLR`
+- The essay might use the default `Bilinear` for output upsacling, we instead use `Nearest-Exact` to simulate `FCN-32s` resolution
+
+![FCNEL-infer](img/FCNEL-infer.png)  
+![FCNEL-loss](img/FCNEL-loss.png)  
+
+
+### Predict emotion directly from ROI annotation
+
+⚠ Mission impossible :(
+
+| Model | Train acc. | Test acc. |
+| :-: | :-: | :-: |
+| Resnet50 | 24.098% | 17.172% |
+
+![RIO_clf](img/RIO_clf-acc.png)
 
 
 ### references
