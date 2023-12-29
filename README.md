@@ -30,6 +30,7 @@ The results reported in the EmotionROI/FCNEL essay:
 
 ![EmoFCNEL-infer](img/EmoFCNEL-infer.png)
 ![EmoFCNEL-loss](img/EmoFCNEL-loss.png)
+![EmoFCNEL-embed](img/EmoFCNEL-embed.png)
 
 
 ### Predict emotion directly from ROI annotation
