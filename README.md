@@ -4,6 +4,8 @@
 
 ----
 
+ℹ The pretrained weights can be found [here](https://pan.quark.cn/s/13e59e043b1c) :)
+
 Reproduction the **FCNEL** model in essay [WHERE DO EMOTIONS COME FROM? PREDICTING THE EMOTION STIMULI MAP](http://chenlab.ece.cornell.edu/Publication/Kuan-Chuan/ICIP16_EmotionROI.pdf), and extended applications.
 
 The results reported in the EmotionROI/FCNEL essay:
